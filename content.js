@@ -97,7 +97,7 @@
     .roast-backdrop{position:fixed;inset:0;width:100vw;height:100vh;background:var(--overlay);pointer-events:auto;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
     .roast-root.roast-open .roast-backdrop{opacity:1;visibility:visible}
     .roast-backdrop[hidden]{display:block;opacity:0;visibility:hidden;pointer-events:none}
-    .roast-drawer{position:fixed;top:0;right:0;z-index:1;width:min(400px,92vw);height:100vh;transform:translateX(100%);transition:transform .22s ease;pointer-events:auto}
+    .roast-drawer{position:fixed;top:0;right:0;z-index:1;width:min(480px,92vw);height:100vh;transform:translateX(100%);transition:transform .22s ease;pointer-events:auto}
     .roast-root.roast-open .roast-drawer{transform:translateX(0)}
     .roast-container{height:100%;display:flex;flex-direction:column;background:var(--bg);border-left:1px solid var(--border);overflow:hidden}
     .roast-header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
@@ -147,8 +147,8 @@
     .roast-item-text{flex:1;word-break:break-word;color:var(--text)}
     .roast-copy-btn,.roast-insert-btn{flex-shrink:0;background:none;border:none;padding:2px 6px;cursor:pointer;opacity:.55;font-size:12px;border-radius:4px;color:var(--text)}
     .roast-copy-btn:hover,.roast-insert-btn:hover{opacity:1;background:var(--bg)}
-    .roast-gif-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
-    .roast-gif{position:relative;border-radius:6px;overflow:hidden;cursor:pointer;aspect-ratio:1;border:1px solid var(--border)}
+    .roast-gif-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+    .roast-gif{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:4/3;border:1px solid var(--border)}
     .roast-gif img{width:100%;height:100%;object-fit:cover;display:block}
     .roast-gif-overlay{position:absolute;inset:0;background:rgba(1,4,9,.62);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;opacity:0;transition:opacity .15s}
     .roast-gif:hover .roast-gif-overlay{opacity:1}
@@ -284,32 +284,33 @@
     Object.assign(hingeBtn.style, {
       all: 'unset',
       position: 'fixed',
-      top: '38%',
+      top: '34%',
       right: '0px',
       zIndex: '2147483647',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '10px',
-      width: '40px',
-      padding: '16px 0',
+      gap: '12px',
+      width: '54px',
+      padding: '22px 0',
       border: '1px solid #30363d',
       borderRight: 'none',
-      borderRadius: '10px 0 0 10px',
+      borderRadius: '14px 0 0 14px',
       background: '#21262d',
       color: '#e6edf3',
       cursor: 'pointer',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       boxSizing: 'border-box',
-      transition: 'background 0.15s ease',
+      transition: 'background 0.15s ease, width 0.15s ease',
       pointerEvents: 'auto',
+      boxShadow: '-2px 0 12px rgba(0,0,0,0.25)',
     });
 
     const flameSvg = document.createElementNS(SVG_NS, 'svg');
     flameSvg.setAttribute('viewBox', '0 0 24 24');
     flameSvg.setAttribute('fill', 'currentColor');
     flameSvg.setAttribute('aria-hidden', 'true');
-    Object.assign(flameSvg.style, { width: '18px', height: '18px', color: '#e16f3e', display: 'block' });
+    Object.assign(flameSvg.style, { width: '26px', height: '26px', color: '#e16f3e', display: 'block' });
     const p1 = document.createElementNS(SVG_NS, 'path');
     p1.setAttribute('d', 'M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z');
     const p2 = document.createElementNS(SVG_NS, 'path');
@@ -321,9 +322,9 @@
     Object.assign(labelSpan.style, {
       writingMode: 'vertical-rl',
       transform: 'rotate(180deg)',
-      fontSize: '11px',
-      fontWeight: '650',
-      letterSpacing: '0.16em',
+      fontSize: '13px',
+      fontWeight: '700',
+      letterSpacing: '0.18em',
       textTransform: 'uppercase',
       color: '#e6edf3',
     });
@@ -340,8 +341,8 @@
     });
 
     hingeBtn.append(accentBar, flameSvg, labelSpan);
-    hingeBtn.addEventListener('mouseenter', () => { hingeBtn.style.background = '#2d333b'; });
-    hingeBtn.addEventListener('mouseleave', () => { hingeBtn.style.background = '#21262d'; });
+    hingeBtn.addEventListener('mouseenter', () => { hingeBtn.style.background = '#2d333b'; hingeBtn.style.width = '60px'; });
+    hingeBtn.addEventListener('mouseleave', () => { hingeBtn.style.background = '#21262d'; hingeBtn.style.width = '54px'; });
     document.body.appendChild(hingeBtn);
     console.info('[RoastMyPR] hinge button added to page');
 
@@ -353,7 +354,7 @@
       position: 'fixed',
       top: '0',
       right: '0',
-      width: '0',
+      width: 'min(480px, 92vw)',
       height: '100vh',
       zIndex: '2147483646',
       pointerEvents: 'none',
@@ -378,6 +379,13 @@
     shadow.appendChild(roastRoot);
 
     panelContainer = roastRoot.querySelector('#roast-panel');
+
+    // Stop keyboard events from leaking to GitHub's shortcut handlers
+    ['keydown', 'keyup', 'keypress'].forEach(evt => {
+      drawerHost.addEventListener(evt, (e) => {
+        if (e.key !== 'Escape') e.stopPropagation();
+      }, true);
+    });
 
     hingeBtn.addEventListener('click', toggleDrawer);
     backdrop.addEventListener('click', closeDrawer);
@@ -428,14 +436,12 @@
     if (hingeBtn) {
       hingeBtn.setAttribute('aria-expanded', String(open));
       hingeBtn.setAttribute('aria-label', open ? 'Close RoastMyPR' : 'Open RoastMyPR');
-      hingeBtn.style.right = open ? 'min(400px, 92vw)' : '0px';
       hingeBtn.style.opacity = open ? '0' : '1';
       hingeBtn.style.pointerEvents = open ? 'none' : 'auto';
     }
     if (drawer) drawer.setAttribute('aria-hidden', String(!open));
     if (backdrop) backdrop.hidden = !open;
     if (drawerHost) {
-      drawerHost.style.width = open ? 'min(400px, 92vw)' : '0';
       drawerHost.style.pointerEvents = open ? 'auto' : 'none';
     }
     try { chrome.storage.local.set({ roastDrawerOpen: open }); } catch (e) {}
@@ -1103,7 +1109,14 @@
     }
 
     searchBtn?.addEventListener('click', doGifSearch);
-    searchInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doGifSearch(); });
+    if (searchInput) {
+      const stopLeak = (e) => e.stopPropagation();
+      searchInput.addEventListener('keydown', (e) => { stopLeak(e); if (e.key === 'Enter') doGifSearch(); });
+      searchInput.addEventListener('keyup', stopLeak);
+      searchInput.addEventListener('keypress', stopLeak);
+      searchInput.addEventListener('input', stopLeak);
+      searchInput.addEventListener('focus', stopLeak);
+    }
 
     panelContainer.querySelector('.roast-reset-btn')?.addEventListener('click', renderIdleState);
   }
