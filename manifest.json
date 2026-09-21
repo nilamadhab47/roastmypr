@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "RoastMyPR",
+  "version": "1.0.3",
+  "description": "AI-powered code reviews + funny GIFs for your GitHub PRs.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://github.com/*",
+    "https://*.githubusercontent.com/*",
+    "https://*.giphy.com/*",
+    "https://api.roastmypr.com/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content.css"],
+      "matches": ["https://github.com/*"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

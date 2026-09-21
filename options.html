@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoastMyPR — Settings</title>
+  <style>
+    :root {
+      --bg: #f6f8fa;
+      --card: #ffffff;
+      --surface: #f6f8fa;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --muted: #656d76;
+      --accent: #bc4c00;
+      --accent-hover: #9a3412;
+      --accent-fg: #ffffff;
+      --accent-subtle: #fff1e5;
+      --danger: #cf222e;
+      --success: #1a7f37;
+      --header-bg: #1f2328;
+      --header-fg: #f0f6fc;
+      --focus: 0 0 0 3px rgba(188, 76, 0, 0.28);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --card: #161b22;
+        --surface: #21262d;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #e16f3e;
+        --accent-hover: #f0883e;
+        --accent-fg: #0d1117;
+        --accent-subtle: #3d2314;
+        --danger: #f85149;
+        --success: #3fb950;
+        --header-bg: #161b22;
+        --header-fg: #e6edf3;
+        --focus: 0 0 0 3px rgba(225, 111, 62, 0.35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0;
+      padding: 32px 16px;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .header {
+      background: var(--header-bg);
+      color: var(--header-fg);
+      padding: 22px 24px;
+      border-bottom: 3px solid var(--accent);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 650;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .header h1 svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent);
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .content { padding: 24px; }
+
+    .api-key-section { margin-bottom: 24px; }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 650;
+      margin-bottom: 6px;
+    }
+
+    .section-desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: var(--focus);
+    }
+
+    .input-group button {
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .input-group button:hover { background: var(--card); }
+    .input-group button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .status {
+      margin-top: 8px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-success { color: var(--success); }
+    .status-error { color: var(--danger); }
+    .status-loading { color: var(--muted); }
+
+    .account-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .account-tier {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--accent-fg);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .account-usage {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .account-usage-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .pricing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .pricing-card.current {
+      border-color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .pricing-name {
+      font-weight: 650;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .pricing-price {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .pricing-features {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .get-key-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .get-key-link:hover { text-decoration: underline; }
+
+    .notice {
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 16px;
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .notice a { color: var(--accent); }
+
+    .saved-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--success);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(-12px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    .saved-toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/><path d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.974 5.974 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg>
+        RoastMyPR
+      </h1>
+      <p>Settings</p>
+    </div>
+
+    <div class="content">
+      <div class="api-key-section">
+        <div class="section-title">API key</div>
+        <p class="section-desc">Enter your RoastMyPR API key to start roasting PRs.</p>
+        <div class="input-group">
+          <input type="password" id="api-key" placeholder="rmpr_beta_…">
+          <button type="button" id="validate-btn">Validate</button>
+        </div>
+        <div class="status" id="api-status"></div>
+        <button type="button" class="btn btn-primary" id="save-btn">Save API key</button>
+        <a href="https://roastmypr.com/dashboard" target="_blank" class="get-key-link">
+          Don’t have a key? Get a free API key →
+        </a>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="account-card" id="account-card" style="display: none;">
+        <div class="account-tier" id="tier-badge">Free Beta</div>
+        <div class="account-usage" id="usage-display">—</div>
+        <div class="account-usage-label">calls remaining this hour</div>
+      </div>
+
+      <div class="section-title">Plans</div>
+      <div class="pricing-grid">
+        <div class="pricing-card" id="plan-beta">
+          <div class="pricing-name">Free Beta</div>
+          <div class="pricing-price">$0</div>
+          <div class="pricing-features">100 calls/hour</div>
+        </div>
+        <div class="pricing-card" id="plan-enterprise">
+          <div class="pricing-name">Enterprise</div>
+          <div class="pricing-price">Custom</div>
+          <div class="pricing-features">Higher limits + support</div>
+        </div>
+      </div>
+
+      <div class="notice">
+        <strong>Free beta access</strong>
+        The free beta key includes 100 API calls per hour.
+        Need higher limits? <a href="https://roastmypr.com/pricing" target="_blank">Contact us for Enterprise access</a>.
+      </div>
+    </div>
+  </div>
+
+  <div class="saved-toast" id="saved-toast">Settings saved</div>
+
+  <script src="options.js"></script>
+</body>
+</html>
