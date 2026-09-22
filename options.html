@@ -6,41 +6,16 @@
   <title>RoastMyPR — Settings</title>
   <style>
     :root {
-      --bg: #f6f8fa;
-      --card: #ffffff;
-      --surface: #f6f8fa;
-      --border: #d0d7de;
-      --text: #1f2328;
-      --muted: #656d76;
-      --accent: #bc4c00;
-      --accent-hover: #9a3412;
-      --accent-fg: #ffffff;
-      --accent-subtle: #fff1e5;
-      --danger: #cf222e;
-      --success: #1a7f37;
-      --header-bg: #1f2328;
-      --header-fg: #f0f6fc;
-      --focus: 0 0 0 3px rgba(188, 76, 0, 0.28);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0d1117;
-        --card: #161b22;
-        --surface: #21262d;
-        --border: #30363d;
-        --text: #e6edf3;
-        --muted: #8b949e;
-        --accent: #e16f3e;
-        --accent-hover: #f0883e;
-        --accent-fg: #0d1117;
-        --accent-subtle: #3d2314;
-        --danger: #f85149;
-        --success: #3fb950;
-        --header-bg: #161b22;
-        --header-fg: #e6edf3;
-        --focus: 0 0 0 3px rgba(225, 111, 62, 0.35);
-      }
+      --bg: #070708;
+      --card: #0d0d10;
+      --surface: #141418;
+      --border: rgba(255,255,255,0.08);
+      --text: #f5f7fa;
+      --muted: #8b949e;
+      --red: #ff4d4d;
+      --green: #39ff88;
+      --orange: #e16f3e;
+      --focus: 0 0 0 3px rgba(255,77,77,0.28);
     }
 
     * { box-sizing: border-box; }
@@ -58,35 +33,25 @@
     }
 
     .container {
-      max-width: 520px;
+      max-width: 560px;
       margin: 0 auto;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 14px;
       overflow: hidden;
     }
 
     .header {
-      background: var(--header-bg);
-      color: var(--header-fg);
       padding: 22px 24px;
-      border-bottom: 3px solid var(--accent);
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #141418 0%, var(--card) 100%);
     }
 
     .header h1 {
       margin: 0;
       font-size: 18px;
-      font-weight: 650;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      letter-spacing: -0.02em;
-    }
-
-    .header h1 svg {
-      width: 20px;
-      height: 20px;
-      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: -0.03em;
     }
 
     .header p {
@@ -97,208 +62,191 @@
 
     .content { padding: 24px; }
 
-    .api-key-section { margin-bottom: 24px; }
+    .section { margin-bottom: 28px; }
 
     .section-title {
       font-size: 15px;
-      font-weight: 650;
-      margin-bottom: 6px;
+      font-weight: 750;
+      margin-bottom: 4px;
     }
 
     .section-desc {
       font-size: 13px;
       color: var(--muted);
-      margin-bottom: 12px;
+      margin: 0 0 12px;
     }
 
-    .input-group {
-      display: flex;
-      gap: 8px;
-    }
+    .input-group { display: flex; gap: 8px; }
 
     .input-group input {
       flex: 1;
       padding: 10px 12px;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 14px;
       font-family: ui-monospace, "SF Mono", Menlo, monospace;
-      background: var(--bg);
+      background: var(--surface);
       color: var(--text);
     }
 
     .input-group input:focus {
       outline: none;
-      border-color: var(--accent);
+      border-color: var(--red);
       box-shadow: var(--focus);
     }
 
-    .input-group button {
+    .ghost-btn, .btn {
       padding: 10px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 650;
+      font-family: inherit;
       cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface);
       color: var(--text);
-      white-space: nowrap;
     }
 
-    .input-group button:hover { background: var(--card); }
-    .input-group button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .ghost-btn:hover { border-color: rgba(255,255,255,0.18); }
+    .ghost-btn:disabled, .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .status {
-      margin-top: 8px;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .btn-primary {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      background: var(--red);
+      color: #fff;
+      border-color: transparent;
     }
 
-    .status-success { color: var(--success); }
-    .status-error { color: var(--danger); }
+    .status { margin-top: 8px; font-size: 13px; }
+    .status-success { color: var(--green); }
+    .status-error { color: var(--red); }
     .status-loading { color: var(--muted); }
 
-    .account-card {
+    .account {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 18px;
-      margin-bottom: 24px;
-      text-align: center;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 28px;
     }
 
-    .account-tier {
-      display: inline-block;
-      background: var(--accent);
-      color: var(--accent-fg);
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 650;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .account-usage {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .account-usage-label {
+    .account-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
       font-size: 13px;
-      color: var(--muted);
-      margin-top: 4px;
     }
 
-    .btn {
-      display: inline-block;
-      padding: 10px 18px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
+    .account-row + .account-row { margin-top: 8px; }
+
+    .muted { color: var(--muted); }
+
+    .pills {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .pill {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
       cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      border: none;
+      text-align: left;
       font-family: inherit;
     }
 
-    .btn-primary {
-      background: var(--accent);
-      color: var(--accent-fg);
-      width: 100%;
-      margin-top: 16px;
+    .pill strong { font-size: 14px; }
+    .pill span { font-size: 11px; color: var(--muted); }
+    .pill.active {
+      border-color: var(--red);
+      box-shadow: inset 0 0 0 1px var(--red);
     }
 
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 24px 0;
-    }
-
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+    .level-row {
+      display: flex;
+      align-items: center;
       gap: 12px;
-      margin-bottom: 16px;
     }
 
-    .pricing-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      text-align: center;
+    input[type="range"] { flex: 1; accent-color: var(--red); }
+
+    .level-value {
+      min-width: 42px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
     }
 
-    .pricing-card.current {
-      border-color: var(--accent);
-      background: var(--accent-subtle);
-    }
-
-    .pricing-name {
-      font-weight: 650;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-
-    .pricing-price {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .pricing-features {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 8px;
-    }
-
-    .get-key-link {
-      display: block;
-      text-align: center;
-      margin-top: 16px;
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    .get-key-link:hover { text-decoration: underline; }
-
-    .notice {
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       padding: 12px 14px;
-      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 16px;
+      border-radius: 10px;
+      background: var(--surface);
     }
 
-    .notice strong {
+    .switch {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .switch i {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: #2a2a32;
+      cursor: pointer;
+    }
+
+    .switch i::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.15s ease;
+    }
+
+    .switch input:checked + i { background: var(--green); }
+    .switch input:checked + i::after { transform: translateX(18px); }
+
+    .site-link {
       display: block;
-      margin-bottom: 4px;
-      color: var(--text);
+      text-align: center;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
     }
 
-    .notice a { color: var(--accent); }
+    .site-link:hover { color: var(--text); }
 
     .saved-toast {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: var(--success);
+      background: #14532d;
       color: #fff;
       padding: 10px 16px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: 600;
       opacity: 0;
       transform: translateY(-12px);
@@ -306,69 +254,138 @@
       pointer-events: none;
     }
 
-    .saved-toast.visible {
-      opacity: 1;
-      transform: translateY(0);
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      margin-bottom: 10px;
     }
+    .user-box img { width: 40px; height: 40px; border-radius: 50%; }
+    .user-box strong { display: block; }
+    .user-box span { color: var(--muted); font-size: 12px; }
+    textarea {
+      width: 100%;
+      min-height: 88px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+    }
+    textarea:focus { outline: none; border-color: var(--red); box-shadow: var(--focus); }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/><path d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.974 5.974 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg>
-        RoastMyPR
-      </h1>
-      <p>Settings</p>
+      <h1>🔥 RoastMyPR</h1>
+      <p>Settings. Personality. Jev-checked roasts.</p>
     </div>
 
     <div class="content">
-      <div class="api-key-section">
+      <div class="section">
+        <div class="section-title">Google account</div>
+        <p class="section-desc">Sign in so personality, stats, and feedback follow you across the website and extension.</p>
+        <div id="google-signed-out">
+          <button type="button" class="btn btn-primary" id="google-btn">Continue with Google</button>
+        </div>
+        <div id="google-signed-in" style="display:none">
+          <div class="user-box">
+            <img id="google-pic" alt="" width="40" height="40">
+            <div>
+              <strong id="google-name">You</strong>
+              <span id="google-email"></span>
+            </div>
+          </div>
+          <button type="button" class="ghost-btn" id="logout-btn">Sign out</button>
+        </div>
+      </div>
+
+      <div class="section">
         <div class="section-title">API key</div>
-        <p class="section-desc">Enter your RoastMyPR API key to start roasting PRs.</p>
+        <p class="section-desc">Optional fallback. Google login creates one for you.</p>
         <div class="input-group">
-          <input type="password" id="api-key" placeholder="rmpr_beta_…">
-          <button type="button" id="validate-btn">Validate</button>
+          <input type="password" id="api-key" placeholder="rmpr_beta_…" autocomplete="off">
+          <button type="button" class="ghost-btn" id="validate-btn">Check</button>
         </div>
         <div class="status" id="api-status"></div>
-        <button type="button" class="btn btn-primary" id="save-btn">Save API key</button>
-        <a href="https://roastmypr.com/dashboard" target="_blank" class="get-key-link">
-          Don’t have a key? Get a free API key →
-        </a>
+        <button type="button" class="btn btn-primary" id="save-btn">Save</button>
       </div>
 
-      <div class="divider"></div>
-
-      <div class="account-card" id="account-card" style="display: none;">
-        <div class="account-tier" id="tier-badge">Free Beta</div>
-        <div class="account-usage" id="usage-display">—</div>
-        <div class="account-usage-label">calls remaining this hour</div>
-      </div>
-
-      <div class="section-title">Plans</div>
-      <div class="pricing-grid">
-        <div class="pricing-card" id="plan-beta">
-          <div class="pricing-name">Free Beta</div>
-          <div class="pricing-price">$0</div>
-          <div class="pricing-features">100 calls/hour</div>
+      <div class="account" id="account-card" style="display: none;">
+        <div class="account-row">
+          <span class="muted">Connection</span>
+          <span id="connection-status">Connected</span>
         </div>
-        <div class="pricing-card" id="plan-enterprise">
-          <div class="pricing-name">Enterprise</div>
-          <div class="pricing-price">Custom</div>
-          <div class="pricing-features">Higher limits + support</div>
+        <div class="account-row">
+          <span class="muted">Plan</span>
+          <span id="tier-badge">Free Beta</span>
+        </div>
+        <div class="account-row">
+          <span class="muted">Usage this hour</span>
+          <span id="usage-display">—</span>
         </div>
       </div>
 
-      <div class="notice">
-        <strong>Free beta access</strong>
-        The free beta key includes 100 API calls per hour.
-        Need higher limits? <a href="https://roastmypr.com/pricing" target="_blank">Contact us for Enterprise access</a>.
+      <div class="section">
+        <div class="section-title">Roast personality</div>
+        <p class="section-desc">Still roasting the code. Never the person.</p>
+        <div class="pills" id="personality-pills">
+          <button type="button" class="pill" data-personality="dry"><strong>😐 Dry</strong><span>Office-holiday-party energy</span></button>
+          <button type="button" class="pill" data-personality="sarcastic"><strong>😏 Sarcastic</strong><span>You already know</span></button>
+          <button type="button" class="pill active" data-personality="savage"><strong>🔥 Savage</strong><span>Default. Recommended</span></button>
+          <button type="button" class="pill" data-personality="unhinged"><strong>☠️ Unhinged</strong><span>Internet at 2am</span></button>
+        </div>
       </div>
+
+      <div class="section">
+        <div class="section-title">Default roast level</div>
+        <p class="section-desc">Starting intensity. “Make it meaner” can still escalate.</p>
+        <div class="level-row">
+          <input type="range" id="roast-level" min="1" max="5" value="3">
+          <div class="level-value" id="roast-level-label">3 / 5</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">GIF reactions</div>
+        <div class="toggle">
+          <div>
+            <strong>Show GIFs</strong>
+            <div class="muted" style="font-size:12px;margin-top:2px">Every roast deserves a reaction.</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="gifs-enabled" checked>
+            <i></i>
+          </label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Jev quality gate</div>
+        <p class="section-desc">Every roast is scored by <a href="https://typesafe.ai" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">Jev</a> (TypeSafe) before you insert it on GitHub — is it about this diff, funny, and safe to post? If Jev is down, the roast still ships.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Feedback</div>
+        <p class="section-desc">Roasts too mean? GIFs off? Tell us. We roast PRs, not people who write feedback.</p>
+        <textarea id="feedback-text" placeholder="The kitchen sink archetype was too accurate."></textarea>
+        <button type="button" class="btn btn-primary" id="feedback-btn">Send feedback</button>
+        <div class="status" id="feedback-status"></div>
+      </div>
+
+      <a class="site-link" href="https://roastmypr.xyz/account" target="_blank" rel="noopener noreferrer">Manage account on roastmypr.xyz →</a>
     </div>
   </div>
 
-  <div class="saved-toast" id="saved-toast">Settings saved</div>
-
+  <div class="saved-toast" id="saved-toast">Saved. The engine remembers.</div>
   <script src="options.js"></script>
 </body>
 </html>

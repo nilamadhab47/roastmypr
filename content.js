@@ -7,9 +7,73 @@
   const MAX_DIFF_CHARS = 15000;
   const SIZE_LIMIT = 400;
   const HOST_ID = 'roast-my-pr-host';
+  const SITE_URL = 'https://roastmypr.xyz';
+  const LOADING_LINES = [
+    'Reading the diff...',
+    'Checking git blame...',
+    'Asking Jev if this joke is even about the diff...',
+    'Finding the word "temporary"...',
+    'Oh no.'
+  ];
+  const LEVEL_LABELS = {
+    1: 'Friendly fire',
+    2: 'Mildly spicy',
+    3: 'Personal',
+    4: 'Ruthless',
+    5: 'Career reevaluation'
+  };
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const SVG_TAGS = { svg: 1, path: 1, g: 1, circle: 1, line: 1 };
+  const HINGLISH_RE = /[\u0900-\u097F]|\bitna\b|\bnahi\b|\bnahin\b|\blikha\b|\bdikha\b|\bbhai\b|\byaar\b|\bmatlab\b|\bnamaste\b|\bkya\b|\bphir\b|\bbanaaye\b|\bhai na\b|\bakhir\b|\bbilkul\b|\baccha\b|\btheek\b|\bkyun\b|\blekin\b|\bbahut\b|\bthoda\b|\bdekho\b|\barey\b|\bbakwas\b|\bjugaad\b|\bhi nahi\b|\bkar diya\b|\bho gaya\b/i;
+  const GIF_BANNED_RE = /bollywood|desi|hindi|bhai|srk|shah rukh|namaste|dhol|item song|indian movie|shahrukh|hinglish|matlab|yaar|itna|nahi|likha|dikha/i;
+  const GIF_CODING_RE = /code|pr\b|pull request|merge|commit|deploy|bug|laptop|programmer|debug|review|lgtm|ship|test|diff|github|dev|this is fine|crying|panic|scream|rubber stamp|too many|keyboard/i;
+
+  function isEnglishLine(line) {
+    const text = String(line || '').trim();
+    return !!text && !HINGLISH_RE.test(text);
+  }
+
+  function fallbackEnglishRoasts(prData) {
+    const title = String(prData?.title || 'this PR').replace(/\s+/g, ' ').trim().slice(0, 48);
+    const files = Number(prData?.fileCount || 0);
+    const lines = Number(prData?.lineCount || 0);
+    return [
+      files >= 8
+        ? `${files} files for "${title}" is a lot of confidence.`
+        : `"${title}" — the title shipped harder than the diff.`,
+      lines > 0
+        ? `${lines} lines later, tests are still a rumor.`
+        : 'Test plan: present. Code: missing in action.',
+      'Docs showed up. Implementation left a voicemail.',
+      'A magician PR: big talk, nothing in the hat.'
+    ];
+  }
+
+  function englishRoastOptions(review, prData) {
+    const pool = [
+      review.roast,
+      ...(review.alternativeRoasts || []),
+      ...(review.jokes || [])
+    ].map((line) => String(line || '').trim()).filter(isEnglishLine);
+    const unique = [];
+    for (const line of [...pool, ...fallbackEnglishRoasts(prData)]) {
+      if (unique.length >= 4) break;
+      if (!unique.some((x) => x.toLowerCase() === line.toLowerCase())) unique.push(line);
+    }
+    return unique.slice(0, 4);
+  }
+
+  function gifQueriesForPr(queries, prData) {
+    const files = Number(prData?.fileCount || 0);
+    const lines = Number(prData?.lineCount || 0);
+    const grounded = [];
+    if (files >= 20 || lines >= 800) grounded.push('this is fine dog fire');
+    if (files >= 8) grounded.push('too many files');
+    if (lines >= 300) grounded.push('endless scrolling code');
+    grounded.push('code review panic', 'merge conflict screaming', 'programmer crying laptop', 'lgtm rubber stamp');
+    return grounded.slice(0, 4);
+  }
 
   function h(tag, props, ...children) {
     const node = SVG_TAGS[tag]
@@ -91,25 +155,25 @@
   ];
 
   const DRAWER_CSS = `
-    .roast-root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#e16f3e;--accent-hover:#f0883e;--accent-fg:#0d1117;--accent-subtle:#3d2314;--danger:#f85149;--danger-subtle:#490202;--success:#3fb950;--success-subtle:#0f2d16;--warning:#d4a72c;--warning-subtle:#3d2e00;--info-subtle:#0c2d6b;--overlay:rgba(1,4,9,.55);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;color:var(--text);-webkit-font-smoothing:antialiased}
+    .roast-root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#e16f3e;--accent-hover:#f0883e;--accent-fg:#0d1117;--accent-subtle:#3d2314;--danger:#f85149;--danger-subtle:#490202;--success:#3fb950;--success-subtle:#0f2d16;--warning:#d4a72c;--warning-subtle:#3d2e00;--info-subtle:#0c2d6b;--overlay:rgba(1,4,9,.55);width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;color:var(--text);-webkit-font-smoothing:antialiased}
     .roast-root *,.roast-root *::before,.roast-root *::after{box-sizing:border-box}
     .roast-flame{width:16px;height:16px;display:block;color:var(--accent)}
     .roast-backdrop{position:fixed;inset:0;width:100vw;height:100vh;background:var(--overlay);pointer-events:auto;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
     .roast-root.roast-open .roast-backdrop{opacity:1;visibility:visible}
     .roast-backdrop[hidden]{display:block;opacity:0;visibility:hidden;pointer-events:none}
-    .roast-drawer{position:fixed;top:0;right:0;z-index:1;width:min(480px,92vw);height:100vh;transform:translateX(100%);transition:transform .22s ease;pointer-events:auto}
+    .roast-drawer{position:fixed;top:0;right:0;z-index:1;width:min(420px,92vw);height:100vh;overflow:hidden;transform:translateX(100%);transition:transform .22s ease;pointer-events:auto}
     .roast-root.roast-open .roast-drawer{transform:translateX(0)}
-    .roast-container{height:100%;display:flex;flex-direction:column;background:var(--bg);border-left:1px solid var(--border);overflow:hidden}
-    .roast-header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
-    .roast-logo{display:flex;color:var(--accent)}
-    .roast-title{font-size:14px;font-weight:650;color:var(--text);letter-spacing:-.01em}
-    .roast-usage{margin-left:auto;font-size:11px;font-weight:500;color:var(--muted);padding:2px 8px;border-radius:999px;border:1px solid var(--border);background:var(--bg);white-space:nowrap}
+    .roast-container{height:100%;display:flex;flex-direction:column;background:var(--bg);border-left:1px solid var(--border);overflow:hidden;min-width:0}
+    .roast-header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:nowrap;min-width:0}
+    .roast-logo{display:flex;color:var(--accent);flex-shrink:0}
+    .roast-title{font-size:14px;font-weight:650;color:var(--text);letter-spacing:-.01em;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .roast-usage{margin-left:auto;font-size:11px;font-weight:500;color:var(--muted);padding:2px 8px;border-radius:999px;border:1px solid var(--border);background:var(--bg);white-space:nowrap;flex-shrink:0}
     .roast-usage:empty{display:none}
     .roast-usage-low{color:var(--warning);border-color:var(--warning);background:var(--warning-subtle)}
     .roast-usage-none,.roast-usage-error{color:var(--danger);border-color:var(--danger);background:var(--danger-subtle)}
     .roast-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);cursor:pointer;flex-shrink:0;opacity:.72}
     .roast-icon-btn:hover{opacity:1;background:var(--bg);border-color:var(--border)}
-    .roast-content{flex:1;overflow-y:auto;padding:16px}
+    .roast-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;min-width:0}
     .roast-lede,.roast-empty-copy{margin:0 0 14px;color:var(--muted);font-size:13px}
     .roast-empty{text-align:left}
     .roast-empty-title{margin:0 0 6px;font-size:14px;font-weight:650;color:var(--text)}
@@ -145,8 +209,8 @@
     .roast-item-hygiene{background:var(--warning-subtle);border-left:3px solid var(--warning)}
     .roast-item-icon{flex-shrink:0;font-size:14px}
     .roast-item-text{flex:1;word-break:break-word;color:var(--text)}
-    .roast-copy-btn,.roast-insert-btn{flex-shrink:0;background:none;border:none;padding:2px 6px;cursor:pointer;opacity:.55;font-size:12px;border-radius:4px;color:var(--text)}
-    .roast-copy-btn:hover,.roast-insert-btn:hover{opacity:1;background:var(--bg)}
+    .roast-copy-btn,.roast-insert-btn{flex-shrink:0;align-self:center;background:none;border:1px solid var(--border);padding:4px 8px;cursor:pointer;opacity:.85;font-size:11px;font-weight:650;border-radius:6px;color:var(--text);white-space:nowrap}
+    .roast-copy-btn:hover,.roast-insert-btn:hover{opacity:1;background:var(--bg);border-color:var(--muted)}
     .roast-gif-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
     .roast-gif{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:4/3;border:1px solid var(--border)}
     .roast-gif img{width:100%;height:100%;object-fit:cover;display:block}
@@ -162,9 +226,12 @@
     .roast-gif-search-input::placeholder{color:var(--muted)}
     .roast-gif-search-btn{flex-shrink:0;padding:7px 12px;font-size:12px}
     .roast-gif-search-results{margin-top:8px}
-    .roast-jokes{margin-top:8px}
-    .roast-joke{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-style:italic;color:var(--muted)}
-    .roast-joke span{flex:1}
+    .roast-options-label{margin:4px 0 8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .roast-jokes{margin:0 0 14px;min-width:0}
+    .roast-joke{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;color:var(--text);min-width:0}
+    .roast-joke span{flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;font-style:italic;color:var(--muted);line-height:1.4}
+    .roast-joke-pick{border-color:var(--accent)}
+    .roast-joke-pick span{color:var(--text);font-style:normal;font-weight:650}
     .roast-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:#21262d;color:#e6edf3;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:500;z-index:5;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;border:1px solid var(--border)}
     .roast-toast-visible{opacity:1;transform:translateX(-50%) translateY(0)}
     .roast-section-hygiene .roast-section-header{background:var(--warning-subtle)}
@@ -173,14 +240,51 @@
     .roast-content::-webkit-scrollbar{width:8px}
     .roast-content::-webkit-scrollbar-track{background:transparent}
     .roast-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+    .roast-pr-kicker{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+    .roast-pr-title{margin:0 0 4px;font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--text)}
+    .roast-pr-sub{margin:0 0 16px;color:var(--muted);font-size:12px}
+    .roast-loading{text-align:left;padding:18px 4px;color:var(--muted)}
+    .roast-loading-line{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;min-height:1.4em;margin:0 0 14px}
+    .roast-loading-line.ohno{color:var(--danger);font-weight:700}
+    .roast-complete{text-align:center;padding:48px 12px}
+    .roast-complete h2{margin:0;font-size:22px;letter-spacing:-.03em}
+    .roast-hero-quote{margin:0 0 10px;font-size:16px;font-weight:750;line-height:1.35;color:var(--text);overflow-wrap:anywhere;word-break:break-word}
+    .roast-reason{margin:0 0 12px;color:var(--muted);font-size:12px;font-style:italic;overflow-wrap:anywhere}
+    .roast-level-wrap,.roast-chaos{border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--surface);margin-bottom:12px}
+    .roast-level-top,.roast-chaos-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex-wrap:nowrap;min-width:0}
+    .roast-level-top span,.roast-chaos-top span{white-space:nowrap}
+    .roast-level-bar,.roast-chaos-bar{height:10px;border-radius:999px;background:#1a1a22;overflow:hidden}
+    .roast-level-bar span,.roast-chaos-bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#e16f3e,#ff4d4d)}
+    .roast-archetype{margin:10px 0 0;font-size:14px;font-weight:750;overflow-wrap:anywhere}
+    .roast-chaos-grid{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin-top:10px;font-size:12px;color:var(--muted)}
+    .roast-chaos-grid b{color:var(--text);font-variant-numeric:tabular-nums;text-align:right}
+    .roast-disclaimer{margin:8px 0 0;font-size:10px;color:var(--muted)}
+    .roast-jev{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0 0 12px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:12px;color:var(--muted);min-width:0;max-width:100%}
+    .roast-jev b,.roast-jev span{display:block;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+    .roast-jev b{color:var(--text);font-weight:750}
+    .roast-jev-warn{border-color:var(--warning);background:var(--warning-subtle)}
+    .roast-jev-warn b{color:var(--warning)}
+    .roast-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;min-width:0}
+    .roast-actions .roast-btn{margin-top:0}
+    .roast-actions-full{grid-template-columns:1fr}
+    .roast-site{display:block;margin-top:14px;text-align:center;color:var(--muted);font-size:11px;text-decoration:none}
+    .roast-site:hover{color:var(--text)}
+    .roast-gif-featured{margin:0 0 12px;border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer;max-width:100%}
+    .roast-gif-featured img{width:100%;display:block;aspect-ratio:16/10;object-fit:cover}
+    .roast-gif-grid,.roast-gif,.roast-pr-title{max-width:100%;min-width:0}
+    .roast-pr-title{overflow-wrap:anywhere}
   `;
 
   let panelContainer = null;
   let roastRoot = null;
   let currentState = 'idle';
   let lastReviewData = null;
+  let lastPrData = null;
+  let lastGifs = [];
+  let previousRoasts = [];
   let userStatus = null;
   let navHooksInstalled = false;
+  let loadingTimer = null;
 
   function init() {
     ensureUI();
@@ -218,6 +322,7 @@
       const drawerHost = document.getElementById(HOST_ID + '-drawer');
       if (hinge) hinge.style.display = 'none';
       if (drawerHost) drawerHost.style.display = 'none';
+      document.body.style.paddingRight = '';
       return;
     }
     const hinge = getHinge();
@@ -354,7 +459,7 @@
       position: 'fixed',
       top: '0',
       right: '0',
-      width: 'min(480px, 92vw)',
+      width: 'min(420px, 92vw)',
       height: '100vh',
       zIndex: '2147483646',
       pointerEvents: 'none',
@@ -432,6 +537,8 @@
     const drawer = roastRoot.querySelector('.roast-drawer');
     const backdrop = roastRoot.querySelector('.roast-backdrop');
     const drawerHost = document.getElementById(HOST_ID + '-drawer');
+    const pad = open ? 'min(420px, 92vw)' : '';
+    document.body.style.paddingRight = pad;
 
     if (hingeBtn) {
       hingeBtn.setAttribute('aria-expanded', String(open));
@@ -508,6 +615,16 @@
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
   }
 
+  function getPRMeta() {
+    const match = location.pathname.match(/\/pull\/(\d+)/);
+    const number = match ? match[1] : '';
+    const title = document.querySelector('.js-issue-title, .gh-header-title .markdown-title')?.textContent?.trim()
+      || document.querySelector('.gh-header-title')?.textContent?.trim()
+      || 'this PR';
+    const stats = document.querySelector('#diffstat, .diffstat, [data-ga-click*="files changed"]')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+    return { number, title, stats };
+  }
+
   function renderIdleState() {
     if (!panelContainer?.querySelector('.roast-header')) {
       renderShell();
@@ -516,20 +633,28 @@
 
     const content = panelContainer.querySelector('.roast-content');
     const needsKey = !userStatus?.hasApiKey || userStatus?.valid === false;
+    const meta = getPRMeta();
 
     if (needsKey && userStatus) {
       fill(content,
         h('div', { class: 'roast-empty' },
-          h('p', { class: 'roast-empty-title', text: userStatus.hasApiKey ? 'API key is invalid' : 'Add an API key to start' }),
-          h('p', { class: 'roast-empty-copy', text: 'Open settings, paste your RoastMyPR key, then roast this pull request from here.' }),
+          h('p', { class: 'roast-empty-title', text: userStatus.hasApiKey ? 'Session is invalid' : 'Sign in to roast' }),
+          h('p', { class: 'roast-empty-copy', text: 'Open the RoastMyPR popup and sign in with Google. Then come back and emotionally damage this PR.' }),
           h('button', { type: 'button', class: 'roast-btn roast-btn-primary roast-options-link', text: 'Open settings' })
         )
       );
     } else {
       fill(content,
-        h('p', { class: 'roast-lede', text: 'Review this pull request with a pointed roast, or drop a quick LGTM with a GIF.' }),
-        h('button', { type: 'button', class: 'roast-btn roast-btn-primary roast-review-btn', text: 'Roast this PR' }),
-        h('button', { type: 'button', class: 'roast-btn roast-btn-secondary roast-quick-btn', title: 'Quick LGTM with a roast-worthy GIF', text: 'Quick LGTM' })
+        h('p', { class: 'roast-pr-kicker', text: meta.number ? `PR #${meta.number}` : 'PULL REQUEST' }),
+        h('h2', { class: 'roast-pr-title', text: `"${meta.title}"` }),
+        h('p', { class: 'roast-pr-sub', text: meta.stats || 'The compiler already approved this. We have not.' }),
+        h('p', { class: 'roast-jev' },
+          h('b', { text: 'Jev' }),
+          h('span', { text: 'Claude writes. Jev scores the roast against this diff.' })
+        ),
+        h('button', { type: 'button', class: 'roast-btn roast-btn-primary roast-review-btn', text: '🔥 Roast this PR' }),
+        h('button', { type: 'button', class: 'roast-btn roast-btn-secondary roast-quick-btn', title: 'Quick LGTM with a roast-worthy GIF', text: 'Quick LGTM' }),
+        h('a', { class: 'roast-site', href: SITE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'roastmypr.xyz' })
       );
     }
 
@@ -547,17 +672,48 @@
     });
   }
   
-  function renderLoadingState() {
-    const content = panelContainer.querySelector('.roast-content');
-    if (content) {
-      fill(content,
-        h('div', { class: 'roast-loading' },
-          h('div', { class: 'roast-spinner' }),
-          h('p', { text: 'Preparing your roast...' })
-        )
-      );
+  function stopLoadingCycle() {
+    if (loadingTimer) {
+      clearInterval(loadingTimer);
+      loadingTimer = null;
     }
+  }
+
+  function renderLoadingState() {
+    stopLoadingCycle();
+    const content = panelContainer.querySelector('.roast-content');
+    if (!content) return;
+    let idx = 0;
+    fill(content,
+      h('div', { class: 'roast-loading' },
+        h('p', { class: 'roast-loading-line', text: LOADING_LINES[0] }),
+        h('div', { class: 'roast-spinner' })
+      )
+    );
+    loadingTimer = setInterval(() => {
+      idx = Math.min(idx + 1, LOADING_LINES.length - 1);
+      const line = content.querySelector('.roast-loading-line');
+      if (line) {
+        line.textContent = LOADING_LINES[idx];
+        line.classList.toggle('ohno', idx === LOADING_LINES.length - 1);
+      }
+      if (idx === LOADING_LINES.length - 1) stopLoadingCycle();
+    }, 420);
     currentState = 'loading';
+  }
+
+  function renderRoastComplete() {
+    const content = panelContainer.querySelector('.roast-content');
+    if (!content) return;
+    fill(content,
+      h('div', { class: 'roast-complete' },
+        h('h2', { text: '🔥 ROAST COMPLETE' })
+      )
+    );
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   function renderErrorState(message, showRetry = true, showGetKey = false, showUpgrade = false) {
@@ -568,7 +724,7 @@
         kids.push(h('a', { href: '#', class: 'roast-btn roast-btn-primary roast-options-link', text: 'Get your API key' }));
       }
       if (showUpgrade) {
-        kids.push(h('a', { href: 'https://roastmypr.com/pricing', target: '_blank', class: 'roast-btn roast-btn-upgrade', text: 'Upgrade for more' }));
+        kids.push(h('a', { href: SITE_URL, target: '_blank', class: 'roast-btn roast-btn-upgrade', text: 'Visit roastmypr.xyz' }));
       }
       if (showRetry) {
         kids.push(h('button', { type: 'button', class: 'roast-btn roast-btn-secondary roast-retry-btn', text: 'Try again' }));
@@ -584,52 +740,74 @@
     currentState = 'error';
   }
 
-  async function startReview(quickMode = false) {
+  async function startReview(quickMode = false, options = {}) {
+    const mode = options.mode || 'fresh';
     openDrawer();
     renderLoadingState();
     
     try {
-      // Refresh user status
       const status = await chrome.runtime.sendMessage({ type: 'GET_USER_STATUS' });
       userStatus = status;
       
       if (!status.hasApiKey) {
-        renderErrorState('Add your RoastMyPR API key to get started.', false, true);
+        stopLoadingCycle();
+        renderErrorState('Sign in with Google from the RoastMyPR popup first.', false, true);
         return;
       }
       
       if (!status.valid) {
+        stopLoadingCycle();
         renderErrorState('Your API key is invalid. Check your settings.', false, true);
         return;
       }
-      
-      // Fetch PR data
-      const prData = await fetchPRData();
-      
-      if (!prData.diff) {
-        renderErrorState('Could not fetch PR diff. Try refreshing the page.');
-        return;
+
+      const prefs = await chrome.storage.local.get(['gifsEnabled', 'roastPersonality', 'defaultRoastLevel']);
+      const gifsOn = prefs.gifsEnabled !== false;
+
+      let prData = lastPrData;
+      if (!prData || mode === 'fresh') {
+        prData = await fetchPRData();
+        lastPrData = prData;
+        previousRoasts = [];
       }
       
-      // Send to backend for review
-      const reviewResult = await chrome.runtime.sendMessage({
+      if (!prData.diff) {
+        stopLoadingCycle();
+        renderErrorState('Could not fetch this PR diff. GitHub blocked the patch file — open the Files tab and try again, or refresh.');
+        return;
+      }
+
+      const targetLevel = mode === 'meaner'
+        ? Math.min(5, (lastReviewData?.roastLevel || prefs.defaultRoastLevel || 3) + 2)
+        : undefined;
+
+      const reviewPromise = chrome.runtime.sendMessage({
         type: 'REVIEW_PR',
         data: {
           prTitle: prData.title,
           prDescription: prData.description,
           diff: prData.truncatedDiff,
           lineCount: prData.lineCount,
-          prUrl: window.location.href
+          fileCount: prData.fileCount,
+          prUrl: window.location.href,
+          mode,
+          previousRoasts,
+          targetLevel,
+          personality: prefs.roastPersonality,
+          defaultLevel: prefs.defaultRoastLevel
         }
       });
+
+      const [reviewResult] = await Promise.all([reviewPromise, wait(1600)]);
       
       if (reviewResult.error) {
+        stopLoadingCycle();
         if (reviewResult.error === 'NO_API_KEY') {
-          renderErrorState('Add your RoastMyPR API key to get started.', false, true);
+          renderErrorState('Sign in with Google from the RoastMyPR popup first.', false, true);
         } else if (reviewResult.error === 'INVALID_API_KEY') {
           renderErrorState('Your API key is invalid. Check your settings.', false, true);
         } else if (reviewResult.error === 'RATE_LIMIT_EXCEEDED') {
-          renderErrorState('Rate limit exceeded (100 calls/hour). Try again soon or upgrade!', false, false, true);
+          renderErrorState('Rate limit exceeded (100 calls/hour). Try again soon.', false, false, true);
         } else {
           renderErrorState(reviewResult.error);
         }
@@ -637,39 +815,45 @@
       }
       
       lastReviewData = reviewResult;
+      if (reviewResult.roast) previousRoasts.push(reviewResult.roast);
       
-      // Update usage display
       if (reviewResult._usage) {
         userStatus = { ...userStatus, ...reviewResult._usage };
         updateUsageDisplay();
       }
       
-      // Update review count stat
       const currentStats = await chrome.storage.local.get(['reviewsCount']);
       await chrome.storage.local.set({ 
         reviewsCount: (currentStats.reviewsCount || 0) + 1 
       });
+      saveRoastHistory(reviewResult, prData);
       
-      // Fetch GIFs
       let gifs = [];
-      if (reviewResult.gif_queries?.length > 0) {
+      const gifQueries = gifQueriesForPr(reviewResult.gif_queries, prData);
+      if (gifsOn && gifQueries.length) {
         const gifResult = await chrome.runtime.sendMessage({
           type: 'FETCH_GIFS',
-          queries: reviewResult.gif_queries
+          queries: gifQueries
         });
         
         if (!gifResult.error) {
           gifs = gifResult.filter(g => !g.error);
         }
       }
+      lastGifs = gifs;
+
+      stopLoadingCycle();
+      renderRoastComplete();
+      await wait(650);
       
       if (quickMode) {
         renderQuickLGTMResult(reviewResult, gifs);
       } else {
-        renderReviewResult(reviewResult, gifs, prData.wasTruncated, prData.omittedFiles);
+        renderReviewResult(reviewResult, gifs, prData);
       }
       
     } catch (err) {
+      stopLoadingCycle();
       console.error('RoastMyPR error:', err);
       renderErrorState(err.message || 'Something went wrong. Try again.');
     }
@@ -714,64 +898,67 @@
   }
 
   async function fetchPRData() {
-    const rawUrl = location.href.split('#')[0];
-    const baseUrl = rawUrl.replace(/\/(files|commits|checks)?\/?$/, '');
-    const diffUrl = baseUrl + '.diff';
-    
-    console.info('[RoastMyPR] fetching diff from:', diffUrl);
-    
+    const match = location.pathname.match(/^\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
+    const owner = match?.[1];
+    const repo = match?.[2];
+    const number = match?.[3];
+
     let diff = '';
-    let wasTruncated = false;
-    let omittedFiles = 0;
-    
-    try {
-      const result = await bgFetch(diffUrl);
-      console.info('[RoastMyPR] diff fetch result:', result?.error || `${(result?.text || '').length} chars`);
-      if (result && result.text) {
-        diff = result.text;
+
+    if (owner && repo && number) {
+      console.info('[RoastMyPR] fetching diff via background:', `${owner}/${repo}#${number}`);
+      try {
+        const result = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            { type: 'FETCH_PR_DIFF', owner, repo, number },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                resolve({ error: chrome.runtime.lastError.message });
+                return;
+              }
+              resolve(response || { error: 'empty response' });
+            }
+          );
+        });
+        if (result?.text) {
+          diff = result.text;
+          console.info('[RoastMyPR] diff fetch result:', `${diff.length} chars`);
+        } else {
+          console.info('[RoastMyPR] diff fetch result:', result?.error || 'empty');
+        }
+      } catch (e) {
+        console.warn('[RoastMyPR] Could not fetch .diff:', e);
       }
-    } catch (e) {
-      console.warn('[RoastMyPR] Could not fetch .diff:', e);
     }
-    
+
     if (!diff) {
       console.info('[RoastMyPR] trying DOM fallback for diff');
       diff = scrapeDiffFromDOM();
       console.info('[RoastMyPR] DOM fallback got:', diff.length, 'chars');
     }
-    
-    if (!diff) {
-      console.info('[RoastMyPR] trying direct fetch as last resort');
-      try {
-        const resp = await fetch(diffUrl);
-        if (resp.ok) diff = await resp.text();
-        console.info('[RoastMyPR] direct fetch got:', diff.length, 'chars');
-      } catch (e) {
-        console.warn('[RoastMyPR] direct fetch failed:', e);
-      }
-    }
-    
-    const { processedDiff, lineCount, truncated, omitted } = processDiff(diff);
-    wasTruncated = truncated;
-    omittedFiles = omitted;
-    
+
+    const { processedDiff, lineCount, fileCount, truncated, omitted } = processDiff(diff);
+
     const title = document.querySelector('.js-issue-title, .gh-header-title .markdown-title, [data-hovercard-type="pull_request"]')?.textContent?.trim() || '';
     const descEl = document.querySelector('.comment-body, .markdown-body.comment-body, .js-comment-body');
     const description = descEl?.textContent?.trim() || '';
-    
+    const meta = getPRMeta();
+
     return {
       title,
       description,
+      number: meta.number,
       diff,
       truncatedDiff: processedDiff,
       lineCount,
-      wasTruncated,
-      omittedFiles
+      fileCount,
+      wasTruncated: truncated,
+      omittedFiles: omitted
     };
   }
   
   function scrapeDiffFromDOM() {
-    const files = document.querySelectorAll('.file');
+    const files = document.querySelectorAll('.file, [data-tagsearch-path], [id^="diff-"]');
     if (files.length === 0) return '';
     
     let diffText = '';
@@ -800,7 +987,7 @@
   
   function processDiff(diff) {
     if (!diff) {
-      return { processedDiff: '', lineCount: 0, truncated: false, omitted: 0 };
+      return { processedDiff: '', lineCount: 0, fileCount: 0, truncated: false, omitted: 0 };
     }
     
     const filePattern = /^diff --git/gm;
@@ -862,96 +1049,184 @@
     return {
       processedDiff,
       lineCount: totalLineCount,
+      fileCount: files.filter(f => !f.isExcluded).length,
       truncated,
       omitted: omittedFiles
     };
   }
   
-  function renderReviewResult(review, gifs, wasTruncated, omittedFiles) {
+  function scoreBand(n) {
+    return Math.max(0, Math.min(100, Math.round(n)));
+  }
+
+  function computeChaosScore(prData) {
+    const files = prData.fileCount || 0;
+    const lines = prData.lineCount || 0;
+    const blob = `${prData.title || ''}\n${prData.description || ''}\n${prData.truncatedDiff || ''}`;
+    const tempHits = (blob.match(/TODO|FIXME|HACK|XXX|temporary|console\.log/gi) || []).length;
+    const dirs = new Set(
+      [...(prData.truncatedDiff || '').matchAll(/^diff --git a\/(.+?) /gm)].map((m) => m[1].split('/')[0])
+    );
+
+    const filesScore = scoreBand(files * 7);
+    const linesScore = scoreBand(lines / 10);
+    const unrelatedScore = scoreBand((dirs.size - 1) * 18);
+    const namingScore = /fix|quick|small|typo|wip|temp|final/i.test(prData.title || '') && lines > 40 ? 88 : 42;
+    const tempScore = scoreBand(tempHits * 22);
+    const overall = scoreBand((filesScore + linesScore + unrelatedScore + namingScore + tempScore) / 5);
+
+    let label = 'Mildly suspicious';
+    if (overall >= 91) label = 'Call incident response';
+    else if (overall >= 76) label = 'Extremely concerning';
+    else if (overall >= 56) label = 'Very concerning';
+    else if (overall >= 31) label = 'Concerning';
+
+    return {
+      overall,
+      label,
+      files: filesScore,
+      lines: linesScore,
+      unrelated: unrelatedScore,
+      naming: namingScore,
+      temporary: tempScore
+    };
+  }
+
+  async function saveRoastHistory(review, prData) {
+    try {
+      const stored = await chrome.storage.local.get(['roastHistory']);
+      const history = Array.isArray(stored.roastHistory) ? stored.roastHistory : [];
+      history.unshift({
+        prNumber: prData.number || '',
+        title: prData.title || '',
+        archetype: review.archetype || '',
+        roastLevel: review.roastLevel || 3,
+        roast: review.roast || '',
+        url: location.href,
+        at: Date.now()
+      });
+      await chrome.storage.local.set({ roastHistory: history.slice(0, 20) });
+    } catch (e) {}
+  }
+
+  function headlineRoast(review) {
+    return review.roast || review.jokes?.[0] || review.review?.[0]?.note || review.vibe || 'This PR made a face.';
+  }
+
+  function jevStatusNode(gate) {
+    if (!gate || gate.skipped || gate.error) return null;
+    const shaky = !!gate.blocking_failed;
+    return h('p', { class: shaky ? 'roast-jev roast-jev-warn' : 'roast-jev' },
+      h('b', { text: shaky ? 'Jev · shaky' : 'Jev · checked' }),
+      h('span', { text: shaky ? 'still insertable — Jev wants a tighter roast' : 'scored against this diff' })
+    );
+  }
+
+  function renderReviewResult(review, gifs, prData) {
     const content = panelContainer.querySelector('.roast-content');
     if (!content) return;
 
-    const typeIcons = { bug: 'Bug', style: 'Style', suggestion: 'Idea', praise: 'Nice' };
-    const ruleIcons = { linear_issue: 'Issue', size: 'Size', description_mismatch: 'Desc', etiquette: 'Note' };
     const roastLevel = review.roastLevel || 3;
-
-    const reviewItems = (review.review || []).map((item, idx) =>
-      h('div', { class: `roast-item roast-item-${item.type || 'suggestion'}` },
-        h('span', { class: 'roast-item-icon', text: typeIcons[item.type] || '•' }),
-        h('span', { class: 'roast-item-text', text: item.note || '' }),
-        h('button', { type: 'button', class: 'roast-copy-btn', dataset: { reviewIdx: String(idx) }, title: 'Copy as comment', text: 'Copy' })
-      )
-    );
-
-    const hygieneItems = (review.hygiene || []).map((item, idx) =>
-      h('div', { class: 'roast-item roast-item-hygiene' },
-        h('span', { class: 'roast-item-icon', text: ruleIcons[item.rule] || 'Note' }),
-        h('span', { class: 'roast-item-text', text: item.note || '' }),
-        h('button', { type: 'button', class: 'roast-copy-btn', dataset: { hygieneIdx: String(idx) }, title: 'Copy as comment', text: 'Copy' })
-      )
-    );
-
-    const gifGrid = gifs.length > 0
-      ? h('div', { class: 'roast-gif-grid' }, ...gifs.map((gif, idx) =>
-          h('div', { class: 'roast-gif', dataset: { gifIdx: String(idx) } },
-            h('img', { dataset: { gifUrl: gif.thumbnail }, alt: gif.title || gif.query || '', loading: 'lazy' }),
-            h('div', { class: 'roast-gif-overlay', text: 'Click to insert' })
-          )
-        ))
-      : h('p', { class: 'roast-no-gifs', text: 'No GIFs available' });
-
-    const jokes = (review.jokes || []).map((joke, idx) =>
-      h('div', { class: 'roast-joke', dataset: { jokeIdx: String(idx) } },
-        h('span', { text: `"${joke}"` }),
-        h('button', { type: 'button', class: 'roast-insert-btn', title: 'Insert as comment', text: 'Insert' })
-      )
-    );
+    const roastOptions = englishRoastOptions(review, prData || lastPrData || {});
+    const roast = roastOptions[0] || headlineRoast(review);
+    const chaos = computeChaosScore(prData || lastPrData || {});
+    const featuredGif = gifs[0];
+    const extraGifs = gifs.slice(1, 5);
+    const reason = isEnglishLine(review.reason) ? review.reason : (isEnglishLine(review.vibe) ? review.vibe : '');
 
     const nodes = [];
-    if (wasTruncated) {
-      nodes.push(h('div', { class: 'roast-notice', text: `Large PR — diff was truncated (${omittedFiles} files omitted)` }));
+    if (prData?.wasTruncated) {
+      nodes.push(h('div', { class: 'roast-notice', text: `Large PR — diff was truncated (${prData.omittedFiles} files omitted)` }));
     }
-    nodes.push(h('div', { class: 'roast-vibe' },
-      h('div', { class: 'roast-vibe-badge', title: `Roast Level: ${roastLevel}/5`, text: `${review.archetype || 'PR'} · ${roastLevel}/5` }),
-      h('div', { class: 'roast-vibe-text', text: `"${review.vibe || 'Unknown vibe'}"` })
-    ));
-    if (review.hygiene?.length > 0) {
-      nodes.push(h('div', { class: 'roast-section roast-section-hygiene' },
-        h('div', { class: 'roast-section-header', dataset: { section: 'hygiene' } },
-          h('span', { text: 'PR Hygiene' }),
-          h('span', { class: 'roast-badge roast-badge-warning', text: String(review.hygiene.length) }),
-          h('span', { class: 'roast-toggle', text: '▼' })
-        ),
-        h('div', { class: 'roast-section-content' }, ...hygieneItems)
-      ));
+
+    const meta = getPRMeta();
+    nodes.push(h('p', { class: 'roast-pr-kicker', text: meta.number ? `PR #${meta.number}` : 'ROASTMYPR' }));
+    if (reason) {
+      nodes.push(h('p', { class: 'roast-reason', text: reason }));
     }
-    nodes.push(h('div', { class: 'roast-section' },
-      h('div', { class: 'roast-section-header', dataset: { section: 'review' } },
-        h('span', { text: 'The Roast' }),
-        h('span', { class: 'roast-badge', text: String(review.review?.length || 0) }),
-        h('span', { class: 'roast-toggle', text: '▼' })
-      ),
-      h('div', { class: 'roast-section-content' },
-        ...(reviewItems.length ? reviewItems : [h('p', { text: 'This PR is too clean to roast.' })]),
-        h('button', { type: 'button', class: 'roast-btn roast-btn-secondary roast-copy-all-btn', text: 'Copy full review' })
+
+    const jevNode = jevStatusNode(review.jev_gate);
+    if (jevNode) nodes.push(jevNode);
+
+    nodes.push(h('p', { class: 'roast-options-label', text: 'Pick a roast' }));
+    nodes.push(h('div', { class: 'roast-jokes' },
+      ...roastOptions.map((joke, idx) =>
+        h('div', { class: idx === 0 ? 'roast-joke roast-joke-pick' : 'roast-joke', dataset: { jokeIdx: String(idx) } },
+          h('span', { text: `"${joke}"` }),
+          h('button', { type: 'button', class: 'roast-insert-btn', title: 'Insert as comment', text: 'Insert' })
+        )
       )
     ));
+
+    nodes.push(h('div', { class: 'roast-level-wrap' },
+      h('div', { class: 'roast-level-top' },
+        h('span', { text: 'Roast level' }),
+        h('span', { text: `${roastLevel} / 5` })
+      ),
+      h('div', { class: 'roast-level-bar' },
+        h('span', { style: `width:${roastLevel * 20}%` })
+      ),
+      h('p', { class: 'roast-archetype', text: `${review.archetype || 'Unclassified chaos'} · ${LEVEL_LABELS[roastLevel] || ''}` })
+    ));
+
+    nodes.push(h('div', { class: 'roast-chaos' },
+      h('div', { class: 'roast-chaos-top' },
+        h('span', { text: 'Chaos score' }),
+        h('span', { text: `${chaos.overall}/100` })
+      ),
+      h('div', { class: 'roast-chaos-bar' },
+        h('span', { style: `width:${chaos.overall}%` })
+      ),
+      h('p', { class: 'roast-archetype', text: `☠️ ${chaos.label}` }),
+      h('div', { class: 'roast-chaos-grid' },
+        h('span', { text: 'Files changed' }), h('b', { text: String(chaos.files) }),
+        h('span', { text: 'Lines changed' }), h('b', { text: String(chaos.lines) }),
+        h('span', { text: 'Unrelated changes' }), h('b', { text: String(chaos.unrelated) }),
+        h('span', { text: 'Naming' }), h('b', { text: String(chaos.naming) }),
+        h('span', { text: '"Temporary" code' }), h('b', { text: String(chaos.temporary) })
+      ),
+      h('p', { class: 'roast-disclaimer', text: 'Not a real engineering metric. Probably.' })
+    ));
+
+    if (featuredGif) {
+      nodes.push(h('div', { class: 'roast-gif-featured roast-gif', dataset: { gifIdx: '0' } },
+        h('img', { dataset: { gifUrl: featuredGif.thumbnail }, alt: featuredGif.title || featuredGif.query || '', loading: 'lazy' })
+      ));
+    }
+
+    if (extraGifs.length) {
+      nodes.push(h('div', { class: 'roast-gif-grid' }, ...extraGifs.map((gif, idx) =>
+        h('div', { class: 'roast-gif', dataset: { gifIdx: String(idx + 1) } },
+          h('img', { dataset: { gifUrl: gif.thumbnail }, alt: gif.title || gif.query || '', loading: 'lazy' }),
+          h('div', { class: 'roast-gif-overlay', text: 'Insert GIF' })
+        )
+      )));
+    }
+
     const gifSearch = h('div', { class: 'roast-gif-search' },
       h('div', { class: 'roast-gif-search-row' },
-        h('input', { type: 'text', class: 'roast-gif-search-input', placeholder: 'Search GIFs... (e.g. hera pheri, bollywood, facepalm)' }),
+        h('input', { type: 'text', class: 'roast-gif-search-input', placeholder: 'Search GIFs...' }),
         h('button', { type: 'button', class: 'roast-btn roast-btn-secondary roast-gif-search-btn', text: 'Search' })
       ),
       h('div', { class: 'roast-gif-search-results' })
     );
+    nodes.push(gifSearch);
 
-    nodes.push(h('div', { class: 'roast-section' },
-      h('div', { class: 'roast-section-header', dataset: { section: 'vibes' } },
-        h('span', { text: 'GIFs & Burns' }),
-        h('span', { class: 'roast-toggle', text: '▼' })
-      ),
-      h('div', { class: 'roast-section-content' }, gifGrid, gifSearch, h('div', { class: 'roast-jokes' }, ...jokes))
+    const meanerDisabled = roastLevel >= 5;
+    nodes.push(h('div', { class: 'roast-actions roast-actions-full' },
+      h('button', { type: 'button', class: 'roast-btn roast-btn-primary roast-insert-all-btn', text: 'Insert into GitHub' })
     ));
-    nodes.push(h('button', { type: 'button', class: 'roast-btn roast-btn-secondary roast-reset-btn', text: 'New roast' }));
+    nodes.push(h('div', { class: 'roast-actions' },
+      h('button', { type: 'button', class: 'roast-btn roast-btn-secondary roast-again-btn', text: '🔥 Another roast' }),
+      h('button', {
+        type: 'button',
+        class: 'roast-btn roast-btn-secondary roast-meaner-btn',
+        disabled: meanerDisabled,
+        text: meanerDisabled ? 'Max damage' : '🔥 Make it meaner'
+      })
+    ));
+    nodes.push(h('button', { type: 'button', class: 'roast-btn roast-btn-secondary roast-reset-btn', text: 'Roast another PR' }));
+    nodes.push(h('a', { class: 'roast-site', href: SITE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'roastmypr.xyz' }));
 
     fill(content, ...nodes);
     proxyAllGifImages(content);
@@ -967,7 +1242,7 @@
 
     fill(content,
       h('div', { class: 'roast-vibe' },
-        h('div', { class: 'roast-vibe-text', text: `"${review.vibe || 'Looks good!'}"` })
+        h('div', { class: 'roast-vibe-text', text: `"${headlineRoast(review)}"` })
       ),
       randomGif && h('div', { class: 'roast-gif-single' },
         h('img', { dataset: { gifUrl: randomGif.thumbnail }, alt: randomGif.title || randomGif.query || '' })
@@ -992,7 +1267,7 @@
     });
 
     content.querySelector('.roast-full-review-btn')?.addEventListener('click', () => {
-      renderReviewResult(review, gifs, false, 0);
+      renderReviewResult(review, gifs, lastPrData);
     });
 
     content.querySelector('.roast-reset-btn')?.addEventListener('click', renderIdleState);
@@ -1001,6 +1276,21 @@
   }
 
   function setupResultListeners(review, gifs) {
+    panelContainer.querySelector('.roast-insert-all-btn')?.addEventListener('click', () => {
+      insertIntoCommentBox(formatFullReview(review, gifs));
+    });
+
+    panelContainer.querySelector('.roast-again-btn')?.addEventListener('click', () => {
+      startReview(false, { mode: 'again' });
+    });
+
+    panelContainer.querySelector('.roast-meaner-btn')?.addEventListener('click', () => {
+      if ((review.roastLevel || 3) >= 5) {
+        showToast('This PR is already at maximum damage.');
+        return;
+      }
+      startReview(false, { mode: 'meaner' });
+    });
     panelContainer.querySelectorAll('.roast-section-header').forEach(header => {
       header.addEventListener('click', () => {
         const section = header.closest('.roast-section');
@@ -1037,8 +1327,7 @@
     });
     
     panelContainer.querySelector('.roast-copy-all-btn')?.addEventListener('click', () => {
-      const fullReview = formatFullReview(review);
-      insertIntoCommentBox(fullReview);
+      insertIntoCommentBox(formatFullReview(review, gifs));
     });
     
     panelContainer.querySelectorAll('.roast-gif').forEach(gif => {
@@ -1060,11 +1349,10 @@
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const jokeEl = btn.closest('.roast-joke');
-        const idx = parseInt(jokeEl?.dataset.jokeIdx);
-        const joke = review.jokes?.[idx];
-        if (joke) {
-          insertIntoCommentBox(joke);
-        }
+        const idx = parseInt(jokeEl?.dataset.jokeIdx, 10);
+        const options = englishRoastOptions(review, lastPrData || {});
+        const joke = options[idx];
+        if (joke) insertIntoCommentBox(joke);
       });
     });
     
@@ -1121,26 +1409,20 @@
     panelContainer.querySelector('.roast-reset-btn')?.addEventListener('click', renderIdleState);
   }
   
-  function formatFullReview(review) {
-    const typeEmoji = { bug: '🐛', style: '💅', suggestion: '💡', praise: '👍' };
-    let text = '## 🔥 RoastMyPR Review\n\n';
-    
-    if (review.hygiene?.length > 0) {
-      text += '### PR Hygiene\n';
-      review.hygiene.forEach(item => {
-        text += `- 📏 ${item.note}\n`;
-      });
-      text += '\n';
+  function formatFullReview(review, gifs) {
+    const roast = englishRoastOptions(review, lastPrData || {})[0] || headlineRoast(review);
+    const level = review.roastLevel || 3;
+    const featured = gifs?.[0];
+    const reason = isEnglishLine(review.reason) ? review.reason : '';
+    let text = `🔥 **RoastMyPR**\n\n`;
+    text += `**${review.archetype || 'Unclassified chaos'}** · ${level}/5\n\n`;
+    text += `> ${roast}\n`;
+    if (reason) text += `\n_${reason}_\n`;
+    if (featured?.original) {
+      text += `\n![${featured.query || 'reaction'}](${featured.original})\n`;
     }
-    
-    if (review.review?.length > 0) {
-      text += '### Findings\n';
-      review.review.forEach(item => {
-        text += `- ${typeEmoji[item.type] || ''} ${item.note}\n`;
-      });
-    }
-    
-    return text.trim();
+    text += `\n_Jev-checked roast_ · [roastmypr.xyz](${SITE_URL})`;
+    return text;
   }
   
   function insertIntoCommentBox(text) {

@@ -1,15 +1,20 @@
 {
   "manifest_version": 3,
   "name": "RoastMyPR",
-  "version": "1.0.3",
-  "description": "AI-powered code reviews + funny GIFs for your GitHub PRs.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "version": "1.0.8",
+  "homepage_url": "https://roastmypr.xyz",
+  "description": "Claude writes the roast. Jev scores it against the diff. Then you drop it on GitHub.",
+  "permissions": ["storage", "activeTab", "scripting", "identity"],
   "host_permissions": [
     "https://github.com/*",
     "https://*.githubusercontent.com/*",
+    "https://api.github.com/*",
     "https://*.giphy.com/*",
+    "https://roastmypr-production.up.railway.app/*",
     "https://api.roastmypr.com/*",
-    "http://localhost:3000/*"
+    "http://localhost:3000/*",
+    "http://localhost:3002/*",
+    "http://127.0.0.1:3002/*"
   ],
   "background": {
     "service_worker": "background.js"
