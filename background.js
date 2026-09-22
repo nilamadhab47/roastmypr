@@ -2,7 +2,7 @@
 // Communicates with RoastMyPR API server
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:3002';
+const API_BASE_URL = 'https://roastmypr-production.up.railway.app';
 
 // Get or create device ID for user identification
 async function getDeviceId() {

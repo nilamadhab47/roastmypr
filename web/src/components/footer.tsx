@@ -69,7 +69,10 @@ export function Footer() {
             🔥 Rickroll me again
           </button>
           <p className="text-xs text-muted text-center">
-            © 2026 RoastMyPR · No PRs were permanently harmed.
+            © 2026 RoastMyPR · No PRs were permanently harmed. ·{" "}
+            <a href="/privacy" className="hover:text-text transition-colors">
+              Privacy
+            </a>
           </p>
         </div>
       </div>

@@ -11,10 +11,7 @@
     "https://api.github.com/*",
     "https://*.giphy.com/*",
     "https://roastmypr-production.up.railway.app/*",
-    "https://api.roastmypr.com/*",
-    "http://localhost:3000/*",
-    "http://localhost:3002/*",
-    "http://127.0.0.1:3002/*"
+    "https://api.roastmypr.com/*"
   ],
   "background": {
     "service_worker": "background.js"

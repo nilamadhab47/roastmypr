@@ -154,9 +154,9 @@ Do not commit `.env`.
 
 Not required to ship: a landing page or a custom domain.
 
-Required: a [Chrome Web Store developer account](https://chrome.google.com/webstore/devconsole) ($5), listing screenshots, and a **privacy policy URL** (the extension reads PR diffs and calls the API).
+Required: a [Chrome Web Store developer account](https://chrome.google.com/webstore/devconsole) ($5), listing screenshots, and a **privacy policy URL**: [https://roastmypr.xyz/privacy](https://roastmypr.xyz/privacy).
 
-Zip only the extension files — leave out `server/`, `node_modules/`, and `.env`:
+Zip only the extension files — leave out `server/`, `web/`, `node_modules/`, and `.env`:
 
 ```bash
 zip -r roastmypr-extension.zip \
