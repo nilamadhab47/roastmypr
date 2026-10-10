@@ -23,14 +23,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const feedbackText = document.getElementById("feedback-text");
   const feedbackStatus = document.getElementById("feedback-status");
 
+  const apiBaseUrlInput = document.getElementById("api-base-url");
+
   const storage = await chrome.storage.local.get([
     "apiKey",
     "roastPersonality",
     "defaultRoastLevel",
     "gifsEnabled",
+    "apiBaseUrl",
   ]);
 
   if (storage.apiKey) apiKeyInput.value = storage.apiKey;
+  if (apiBaseUrlInput && storage.apiBaseUrl) apiBaseUrlInput.value = storage.apiBaseUrl;
 
   loadUserStatus();
 
@@ -132,8 +136,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving…";
     try {
-      await chrome.storage.local.set({ apiKey });
+      const apiBaseUrl = apiBaseUrlInput?.value.trim().replace(/\/$/, "") || "";
       await chrome.storage.local.set({
+        apiKey,
+        apiBaseUrl,
         roastPersonality: currentPersonality(),
         defaultRoastLevel: clampLevel(levelInput.value),
         gifsEnabled: gifsEnabled.checked,
