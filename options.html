@@ -319,6 +319,12 @@
         <button type="button" class="btn btn-primary" id="save-btn">Save</button>
       </div>
 
+      <div class="section">
+        <div class="section-title">API URL (advanced)</div>
+        <p class="section-desc">Leave blank for production. Local server example: <code>http://localhost:3002</code>. The store listing does not include localhost hosts — use <code>manifest.dev.json</code> when talking to a local API.</p>
+        <input type="url" id="api-base-url" placeholder="https://roastmypr-production.up.railway.app" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-family:inherit;font-size:13px">
+      </div>
+
       <div class="account" id="account-card" style="display: none;">
         <div class="account-row">
           <span class="muted">Connection</span>

@@ -84,22 +84,24 @@ curl -X POST http://localhost:3000/api/admin/keys \
 
 ### 2. Point the extension at local (or production)
 
-In `background.js`:
+Do **not** edit `background.js`. Open **Options → API URL (advanced)** and set:
 
-```js
-const API_BASE_URL = 'http://localhost:3000';
-// production: 'https://roastmypr-production.up.railway.app'
+```
+http://localhost:3002
 ```
 
-`manifest.json` already allows both localhost and the Railway host.
+(use whatever `PORT` your server prints). Leave it blank to hit production.
+
+The **shipped** `manifest.json` does not include localhost — Chrome Web Store review treats extra hosts as a permission change. For unpacked local-API work, copy the extra `host_permissions` from `manifest.dev.json` into your local `manifest.json`, reload the extension, and **do not commit that**. `git checkout -- manifest.json` before you open a PR.
 
 ### 3. Load unpacked in Chrome
 
 1. Open `chrome://extensions`
 2. Enable **Developer mode**
 3. **Load unpacked** → select this repo root (not `server/`)
-4. Open the extension **Options** page and paste your API key
-5. Open any GitHub PR — the Roast tab is on the right edge
+4. Open the extension **Options** page and paste your API key (the demo key from `npm run dev`)
+5. If you are talking to a local server, set **API URL (advanced)** (see step 2)
+6. Open any GitHub PR — the Roast tab is on the right edge
 
 After code changes, click **Reload** on the extension card, then hard-refresh the PR page (`Cmd+Shift+R`).
 
@@ -163,6 +165,12 @@ zip -r roastmypr-extension.zip \
   manifest.json background.js content.js content.css \
   popup.html popup.js options.html options.js icons/
 ```
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Hacktoberfest setup lives in `scripts/hacktoberfest-setup.sh` (do not run it until you have reviewed it).
 
 ---
 

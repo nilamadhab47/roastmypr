@@ -2,7 +2,19 @@
 // Communicates with RoastMyPR API server
 
 // API Configuration
-const API_BASE_URL = 'https://roastmypr-production.up.railway.app';
+const DEFAULT_API_BASE_URL = 'https://roastmypr-production.up.railway.app';
+
+async function getApiBaseUrl() {
+  try {
+    const stored = await chrome.storage.local.get(['apiBaseUrl']);
+    const raw = String(stored.apiBaseUrl || DEFAULT_API_BASE_URL).trim().replace(/\/$/, '');
+    const url = new URL(raw);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return DEFAULT_API_BASE_URL;
+    return raw;
+  } catch {
+    return DEFAULT_API_BASE_URL;
+  }
+}
 
 // Get or create device ID for user identification
 async function getDeviceId() {
@@ -126,8 +138,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.type === 'GET_API_URL') {
-    sendResponse({ url: API_BASE_URL });
-    return false;
+    getApiBaseUrl()
+      .then((url) => sendResponse({ url }))
+      .catch((err) => sendResponse({ error: err.message }));
+    return true;
   }
   
   if (request.type === 'GOOGLE_LOGIN') {
@@ -252,7 +266,7 @@ async function handleReviewRequest(data) {
     throw new Error('NO_API_KEY');
   }
   
-  const response = await fetch(`${API_BASE_URL}/api/review`, {
+  const response = await fetch(`${await getApiBaseUrl()}/api/review`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -307,7 +321,7 @@ async function handleGifRequest(queries) {
     return [];
   }
   
-  const response = await fetch(`${API_BASE_URL}/api/gifs`, {
+  const response = await fetch(`${await getApiBaseUrl()}/api/gifs`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ queries })
@@ -333,7 +347,7 @@ async function getUserStatus() {
     };
   }
   
-  const response = await fetch(`${API_BASE_URL}/api/user`, { headers });
+  const response = await fetch(`${await getApiBaseUrl()}/api/user`, { headers });
   
   if (!response.ok) {
     if (response.status === 401) {
@@ -366,14 +380,14 @@ async function getUserStatus() {
 
 async function loginWithGoogle() {
   const redirectUri = chrome.identity.getRedirectURL();
-  const url = `${API_BASE_URL}/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
+  const url = `${await getApiBaseUrl()}/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
   const responseUrl = await chrome.identity.launchWebAuthFlow({ url, interactive: true });
   const token = new URL(responseUrl).searchParams.get('token');
   if (!token) throw new Error('Google login did not return a session');
 
   await chrome.storage.local.set({ authToken: token });
   const headers = await apiHeaders();
-  const me = await fetch(`${API_BASE_URL}/api/me`, { headers });
+  const me = await fetch(`${await getApiBaseUrl()}/api/me`, { headers });
   if (!me.ok) throw new Error('Could not load your RoastMyPR profile');
   const data = await me.json();
   await chrome.storage.local.set({
@@ -391,7 +405,7 @@ async function updatePrefs(prefs) {
   await chrome.storage.local.set(prefs);
   const headers = await apiHeaders();
   if (!headers.Authorization && !headers['x-api-key']) return { ok: true, local: true };
-  const response = await fetch(`${API_BASE_URL}/api/me`, {
+  const response = await fetch(`${await getApiBaseUrl()}/api/me`, {
     method: 'PATCH',
     headers,
     body: JSON.stringify(prefs)
@@ -407,7 +421,7 @@ async function updatePrefs(prefs) {
 
 async function submitFeedback({ message, rating }) {
   const headers = await apiHeaders();
-  const response = await fetch(`${API_BASE_URL}/api/feedback`, {
+  const response = await fetch(`${await getApiBaseUrl()}/api/feedback`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ message, rating })
@@ -422,7 +436,7 @@ async function submitFeedback({ message, rating }) {
 async function trackEvent(name, properties) {
   try {
     const headers = await apiHeaders();
-    await fetch(`${API_BASE_URL}/api/events`, {
+    await fetch(`${await getApiBaseUrl()}/api/events`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ name, properties })
@@ -436,7 +450,7 @@ async function trackEvent(name, properties) {
 async function validateApiKey(apiKey) {
   const deviceId = await getDeviceId();
   
-  const response = await fetch(`${API_BASE_URL}/api/validate`, {
+  const response = await fetch(`${await getApiBaseUrl()}/api/validate`, {
     headers: {
       'x-device-id': deviceId,
       'x-api-key': apiKey
@@ -456,7 +470,7 @@ async function validateApiKey(apiKey) {
 
 chrome.runtime.onInstalled.addListener(async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
+    const response = await fetch(`${await getApiBaseUrl()}/health`);
     if (response.ok) {
       console.log('RoastMyPR API connected successfully');
     }
