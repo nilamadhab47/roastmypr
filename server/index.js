@@ -15,6 +15,7 @@ const { v4: uuidv4 } = require('uuid');
 const store = require('./store');
 const auth = require('./auth');
 const jevGate = require('./jev-gate');
+const { requireAdmin, findExistingKey, parseEventPayload } = require('./security');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -131,20 +132,10 @@ const validateApiKey = wrapAsync(async (req, res, next) => {
     return res.status(401).json({ error: 'Sign in with Google or provide an API key' });
   }
   
-  let keyData = apiKeys.get(apiKey) || await store.getKey(apiKey);
-  
-  if (!keyData && apiKey.startsWith('rmpr_beta_')) {
-    keyData = {
-      tier: 'beta',
-      createdAt: new Date().toISOString(),
-      hourlyUsage: {}
-    };
-    apiKeys.set(apiKey, keyData);
-    await store.putKey(apiKey, keyData);
-  }
-  
+  const keyData = await findExistingKey(apiKey, apiKeys, store);
+
   if (!keyData) {
-    return res.status(401).json({ error: 'Invalid API key' });
+    return res.status(401).json({ error: 'invalid_api_key' });
   }
 
   if (!apiKeys.has(apiKey)) apiKeys.set(apiKey, keyData);
@@ -301,12 +292,14 @@ app.patch('/api/me', validateApiKey, async (req, res) => {
 });
 
 app.post('/api/events', optionalAuth, async (req, res) => {
-  const name = String(req.body?.name || '').slice(0, 64);
-  if (!name) return res.status(400).json({ error: 'Missing event name' });
+  const parsed = parseEventPayload(req.body, req.headers['content-length']);
+  if (!parsed.ok) {
+    return res.status(parsed.status).json({ error: parsed.error });
+  }
   await store.addEvent({
     userId: req.user?.id || null,
-    name,
-    properties: req.body.properties && typeof req.body.properties === 'object' ? req.body.properties : {}
+    name: parsed.name,
+    properties: parsed.properties
   });
   res.json({ ok: true });
 });
@@ -770,12 +763,7 @@ app.post('/api/gifs', validateApiKey, async (req, res) => {
 });
 
 // Generate new API key (admin endpoint)
-app.post('/api/admin/keys', async (req, res) => {
-  const adminKey = req.headers['x-admin-key'];
-  if (adminKey !== process.env.ADMIN_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
+app.post('/api/admin/keys', requireAdmin, async (req, res) => {
   const { tier = 'beta' } = req.body;
   
   if (!TIERS[tier]) {
@@ -793,12 +781,7 @@ app.post('/api/admin/keys', async (req, res) => {
 });
 
 // Admin stats
-app.get('/api/admin/stats', async (req, res) => {
-  const adminKey = req.headers['x-admin-key'];
-  if (adminKey !== process.env.ADMIN_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   const keyList = Array.from(apiKeys.entries()).map(([key, data]) => ({
     keyPrefix: key.slice(0, 20) + '...',
     tier: data.tier,
@@ -831,6 +814,7 @@ async function start() {
   if (process.env.NODE_ENV !== 'production') {
     const demoKey = await generateApiKey('beta');
     console.log(`Demo API Key (for testing): ${demoKey}`);
+    console.log('   (inserted into the store; unknown rmpr_beta_ headers are rejected)');
   }
 
   app.listen(PORT, () => {
@@ -843,7 +827,11 @@ async function start() {
   });
 }
 
-start().catch((err) => {
-  console.error('Failed to start:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  start().catch((err) => {
+    console.error('Failed to start:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = { app, start, generateApiKey, apiKeys };
