@@ -17,11 +17,11 @@ probably get roasted too. Lovingly. It's tradition.
 - Postgres: `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=dev postgres:16`
 - `cd server && cp .env.example .env`
   - set `DATABASE_URL=postgresql://postgres:dev@localhost:5432/postgres`
-  - set `ROASTMYPR_MOCK=1` once [issue #1](https://github.com/nilamadhab47/roastmypr/issues) (mock mode) lands — until then you still need `ANTHROPIC_API_KEY`
+  - set `ROASTMYPR_MOCK=1` so you can roast without Anthropic or Giphy keys
   - leave `TYPESAFE_API_KEY` empty, Jev politely sits this one out (fail-open)
 - `npm install && npm run dev` and copy the **demo key** it prints
-  (that key is inserted into the store on the security branch; inventing `rmpr_beta_…` headers will 401 once that lands)
-- `npm test` in `server/` once the test script is on main (`node --test`)
+  (that key is inserted into the store; inventing `rmpr_beta_…` headers will 401)
+- `npm test` in `server/` (`node --test`)
 - Chrome → `chrome://extensions` → Developer mode → Load unpacked → **repo root**
 - Options → paste the demo key
 - For a **local API**, set **API URL (advanced)** to `http://localhost:3002` (or whatever `PORT` is). The shipped `manifest.json` does **not** include localhost (Chrome Web Store review). Use `manifest.dev.json` while developing: copy its extra `host_permissions` into your local `manifest.json`, then **do not commit that**. Reload the extension.

@@ -23,6 +23,22 @@ const PORT = process.env.PORT || 3000;
 // API Keys from environment variables (YOUR keys, not user's)
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
+const MOCK = process.env.ROASTMYPR_MOCK === '1';
+const MOCK_ROAST = require('./fixtures/mock-roast.json');
+const MOCK_GIFS = [
+  {
+    query: 'code review',
+    thumbnail: 'https://media2.giphy.com/media/LyJ6KPlrFdKnK/200.gif',
+    original: 'https://media2.giphy.com/media/LyJ6KPlrFdKnK/giphy.gif',
+    title: 'The reviewer'
+  },
+  {
+    query: 'this is fine',
+    thumbnail: 'https://media2.giphy.com/media/CNna9G8BQvnoI/200.gif',
+    original: 'https://media2.giphy.com/media/CNna9G8BQvnoI/giphy.gif',
+    title: 'Your confidence'
+  }
+];
 
 // Pricing tiers
 const TIERS = {
@@ -425,6 +441,10 @@ function clampLevel(n, fallback = 3) {
 }
 
 async function generateRoastFromClaude(userPrompt) {
+  if (MOCK) {
+    return JSON.parse(JSON.stringify(MOCK_ROAST));
+  }
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -597,7 +617,7 @@ function normalizeRoast(parsed, prData = {}) {
 app.post('/api/review', validateApiKey, checkRateLimit, async (req, res) => {
   const { keyData, tier } = req;
   
-  if (!ANTHROPIC_API_KEY) {
+  if (!ANTHROPIC_API_KEY && !MOCK) {
     return res.status(503).json({ error: 'Service temporarily unavailable' });
   }
   
@@ -713,14 +733,18 @@ ${diff}`;
 
 // Fetch GIFs endpoint
 app.post('/api/gifs', validateApiKey, async (req, res) => {
-  if (!GIPHY_API_KEY) {
-    return res.json([]);
-  }
-  
   const { queries } = req.body;
-  
+
   if (!queries || !Array.isArray(queries)) {
     return res.status(400).json({ error: 'Missing queries array' });
+  }
+
+  if (MOCK) {
+    return res.json(MOCK_GIFS);
+  }
+
+  if (!GIPHY_API_KEY) {
+    return res.json([]);
   }
   
   try {
@@ -819,6 +843,7 @@ async function start() {
 
   app.listen(PORT, () => {
     console.log(`🔥 RoastMyPR API running on port ${PORT}`);
+    console.log(`   Mock mode: ${MOCK ? 'ON' : 'off'}`);
     console.log(`   Anthropic API: ${ANTHROPIC_API_KEY ? '✓ configured' : '✗ missing'}`);
     console.log(`   Giphy API: ${GIPHY_API_KEY ? '✓ configured' : '✗ missing'}`);
     console.log(`   Google login: ${auth.googleConfigured() ? '✓ configured' : '✗ missing'}`);
